@@ -1,0 +1,13 @@
+---
+title: "Zhao Ping HW2"
+author: "Ping Zhao"
+date: "2/10/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 1
+
