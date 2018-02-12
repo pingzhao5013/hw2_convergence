@@ -94,7 +94,7 @@ m<-secant(20,x=d,0.02,0.01,1e-6,1e-9)
 m
 ```
 
-The matrix above gives iteration information about secant method.  
+The matrix above gives iteration information about the secant method.  
 
 
 
@@ -123,6 +123,96 @@ m.index<-cbind(Index.Theta,m.starting)
 m.index
 
 ```
+
+
+
+###(e)
+```{r}
+
+rate.sq<-m$converage.rate^2
+
+plot(m$converage.rate, ylab = "Rate", main = "Converagence Rate", pch=15)
+
+abline(h=0, col=2)
+
+
+```
+
+As we can see from the rate plot above, the rate is less than 1 and going to 0. Thus, it is supper-linear converagence.
+
+
+
+###(f)
+
+$\theta^{(0)}=0.5$ and $\theta^{(1)}=0.01$
+
+```{r}
+m.f<-secant(1000,x=d,0.5,0.01,1e-6,1e-6)
+plot(m.f$theta)
+```
+
+From the result above, we can see that the secant method doesn't converage in this case.
+
+## Problem 2
+(a) log likelihood function
+
+$$
+l=-20*log2\pi+\Sigma_1^{20}log(1-cos(x_i-\theta))
+$$
+
+
+
+
+
+```{r}
+d.2<-c(3.91, 4.85, 2.28, 4.06, 3.70, 4.04, 5.46, 3.53, 2.28, 1.96, 2.53, 
+       3.88, 2.22, 3.47, 4.82, 2.46, 2.99, 2.54, 0.52, 2.50)
+
+# Defind l as the log likelihood function
+l<-function(t){sum(log(1-cos(d.2-t)))-20*log(2*pi)}
+
+t.p2<-seq(-pi,pi,length.out = 2000)
+y=c()
+
+for(i in 1:2000){y[i]<-l(t.p2[i])}
+
+
+plot(t.p2,y, type="l", main = "log likelihood function", ylab = "log likelihood")
+
+```
+
+
+###(b) MOM Estimator
+
+The first moment is 
+$$
+E(X)=\int_0^{2\pi}(1-cos(x-\theta))/2{\pi} dx=1
+$$
+
+
+###(c) Newton–Raphson method
+
+The Newton-Raphson Method is updating $\theta$ via:
+$$
+\theta^{(n+1)}=\theta^{(n)}-\frac{l'(\theta^{(n)})}{l''(\theta^{(n)})}
+$$
+
+
+
+```{r}
+grad.l<-function(x,t){
+  sum(sin(t-x)/(1-cos(t-x)))
+}
+
+hessian.2<-function(x,t){
+  sum(cos(t-x)/(1-cos(t-x))-sin(t-x)^2/(1-cos(t-x))^2)
+}
+
+
+
+```
+
+
 
 
 
