@@ -11,3 +11,133 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Problem 1
 
+###(a) Gradient Function
+```{r}
+#x=(x1,x2,x3,x4), and t os the parameter (theta)
+grad <- function (x, t) {
+  dl = x[1]/(2+t)-(x[2]+x[3])/(1-t)+x[4]/t
+}
+
+
+```
+
+
+
+
+###(b)Stop your algorithm when either of the following criteria is satisfied:
+
+```{r}
+secant <- function(maxit, x, t0, t1, tolerr, tolgrad){
+  tstar = -1657/7680+sqrt(3728689)/7680
+  digits = -log10(abs(t1 - tstar))
+  it=0
+  stop=0
+  
+  theta=c()
+  converage.rate=c()
+  digit=c()
+  iteration=c()
+  modified.relerr=c()
+  Gradients=c()
+  while (it < maxit & stop==0){
+      it = it+1
+      dl.1 = grad(x,t1)
+      dl.0 = grad(x,t0)
+      
+      tnew = t1-dl.1*(t1-t0)/(dl.1-dl.0)
+  
+      
+      rate = abs(tnew - tstar)/abs(t1 - tstar) #check convergent rate
+      digits = -log10(abs(tnew - tstar)/abs(tstar))
+      mod.relerr = abs(t1 - tnew)/max(1,abs(tnew))
+      dl.new <-grad(x,tnew)
+      
+      if (mod.relerr < tolerr & abs(dl.new) < tolgrad) stop=1 # Stop iteration condition
+      #print(c(it, t, rate,digits))
+      #print(sprintf('it = %2.0f   teta = %12.12f    Rate = %4.2f     digits = %2.1f',it,tnew,rate,digits))
+      #print(sprintf('          relerr = %4.1e,        grad = %4.1e',relerr,dl))
+      t0 = t1 # Update t0
+      t1 = tnew # Update and return
+      
+      theta[it]<- tnew
+      converage.rate[it]<- rate
+      digit[it]<-digits
+      iteration[it]<- it
+      modified.relerr[it] <-mod.relerr
+      Gradients[it]<-dl.1
+    }
+  conver.info<-as.data.frame(cbind(iteration, theta, converage.rate, digit, modified.relerr, Gradients))
+  return(conver.info)
+}
+
+a=c()
+
+
+```
+
+
+
+
+### (c) &(d)
+
+$\theta^{(0)}=.02$ and $\theta^{(1)}=.01$, and use tolerr = 1e-6 and tolgrad=1e-9
+
+The iteration information is in matrix m. A larger matrix m.index contains information of starting points.
+```{r}
+
+d <- c(1997,907,904,32)
+
+#secant(20,x=d,0.02,0.01,1e-6,1e-9 )
+
+
+m<-secant(20,x=d,0.02,0.01,1e-6,1e-9)
+m
+```
+
+The matrix above gives iteration information about secant method.  
+
+
+
+However, I need to add information of the starting point $\theta_0$ and $\theta_1$ to the convergence matrix. As we are applying secant method, the $\theta_2$ is from the first iteration. (I don't think this index system is good.) I added an column of $\theta$ index to the matrix.
+
+```{r}
+
+
+Index.Theta<-seq(0,nrow(m)+1)
+tstar = -1657/7680+sqrt(3728689)/7680
+
+#mod.relerr.0 = abs(0.02 - tnew)/max(1,abs(tnew))
+mod.relerr.1 = abs(0.01 - 0.02)/max(1,abs(0.01))
+
+rate.t1 = abs(0.01 - tstar)/abs(0.02 - tstar)
+
+digits.1 = -log10(abs(0.01 - tstar)/abs(tstar))
+digits.0 = -log10(abs(0.02 - tstar)/abs(tstar))
+
+t0.info<-c(NA,0.02,NA,digits.0, NA, grad(d,0.02))
+t1.info<-c(NA,0.01,rate.t1,digits.1,mod.relerr.1,grad(d,0.01))
+
+m.starting<-rbind(t0.info,t1.info,m)
+m.index<-cbind(Index.Theta,m.starting)
+
+m.index
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
