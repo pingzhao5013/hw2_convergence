@@ -64,13 +64,12 @@ secant <- function(maxit, x, t0, t1, tolerr, tolgrad){
       digit[it]<-digits
       iteration[it]<- it
       modified.relerr[it] <-mod.relerr
-      Gradients[it]<-dl.1
+      Gradients[it]<-dl.new
     }
   conver.info<-as.data.frame(cbind(iteration, theta, converage.rate, digit, modified.relerr, Gradients))
   return(conver.info)
 }
 
-a=c()
 
 
 ```
@@ -91,7 +90,15 @@ d <- c(1997,907,904,32)
 
 
 m<-secant(20,x=d,0.02,0.01,1e-6,1e-9)
-m
+
+# Now, I will modify the out put digit format
+m.dig1<-format(m[,3:6],digit=1)
+m.t<-format(m$theta, digits = 12)
+m.digit<-cbind.data.frame(m$iteration,m.t,m.dig1)
+
+names(m.digit)[1:2] <- c("iteration","theta")
+
+m.digit
 ```
 
 The matrix above gives iteration information about the secant method.  
@@ -120,7 +127,12 @@ t1.info<-c(NA,0.01,rate.t1,digits.1,mod.relerr.1,grad(d,0.01))
 m.starting<-rbind(t0.info,t1.info,m)
 m.index<-cbind(Index.Theta,m.starting)
 
-m.index
+#Now, I will modify the output digits
+m.in.dig<-format(m.index[,4:7],digit=1)
+m.index.digit<-cbind(m.index[,1:3],m.in.dig)
+
+
+m.index.digit
 
 ```
 
@@ -186,9 +198,13 @@ plot(t.p2,y, type="l", main = "log likelihood function", ylab = "log likelihood"
 
 The first moment is 
 $$
-E(X)=\int_0^{2\pi}(1-cos(x-\theta))/2{\pi} dx=1
+E(X)=\int_0^{2\pi}x(1-cos(x-\theta))/2{\pi} dx=sin\theta+\pi=\bar{x}
 $$
+Solve for MOM estimatior
 
+```{r}
+mom.est<-asin(mean(d.2)-pi)
+```
 
 ###(c) Newton–Raphson method
 
@@ -204,10 +220,52 @@ grad.l<-function(x,t){
   sum(sin(t-x)/(1-cos(t-x)))
 }
 
-hessian.2<-function(x,t){
+hess.2<-function(x,t){
   sum(cos(t-x)/(1-cos(t-x))-sin(t-x)^2/(1-cos(t-x))^2)
 }
 
+
+Newton <- function (maxit, x, t, tolerr, tolgrad) {
+  stop=0
+  it=0
+  
+  iter=c()
+  Theta=c()
+  Gradi=c()
+  Error=c()
+  while (stop==0 & it < maxit) {
+    it <- it +1
+    
+    
+    dl = grad.l(x,t)
+    ddl = hess.2(x,t)
+    tnew = t - dl/ddl
+    dl.new<-grad.l(x,tnew)
+    iter[it]<-it
+    Theta[it]<-tnew
+    mod.err = abs(tnew - t)/max(1,abs(tnew))
+    
+    
+    
+    iter[it]<-it
+    Theta[it]<-tnew
+    Gradi[it]<- dl.new
+    Error[it]<-mod.err
+    
+    #rate = abs(tnew - tstar)/abs(t - tstar) # Not knowing tstar here
+
+    t = tnew
+    
+    
+    
+    if(mod.err<tolerr & abs(dl.new)<tolgrad) stop=1
+  } 
+  
+  Gradien<-format(Gradi,digits = 2)
+  Errors<-format(Error,digits = 2)
+  theta.12<-format(Theta, digits = 12)
+  it.info<-cbind.data.frame(iter,Theta,theta.12, Gradien, Errors)
+} 
 
 
 ```
@@ -215,16 +273,93 @@ hessian.2<-function(x,t){
 
 
 
+```{r}
+start.mle<-Newton(20, d.2, mom.est, 1e-6, 1e-9)
+start.left<-Newton(20, d.2, -2.7, 1e-6, 1e-9)
+start.right<-Newton(20, d.2, 2.7, 1e-6, 1e-9)
+
+ 
+
+start.mle # starting point is the MOM estimator
+start.left # starting point is -2.7
+start.right # starting point is 2.7
+```
+
+From the outcome above, we can see that with different starting points, the $\hat\theta$ converage to different value(local optimization).
+
+(d)
+```{r}
+start.sq<-seq(-pi,pi,length.out = 200)
+
+t=c()
+Gr<-c()
+for(i in 1:200){
+  
+  t[i]<-tail(Newton(20, d.2, start.sq[i], 1e-6, 1e-9)$Theta, n=1)
+  Gr[i]<-tail(Newton(20, d.2, start.sq[i], 1e-6, 1e-9)$Gradi, n=1)
+}
+
+plot.data<-cbind.data.frame(start.sq,t,Gr)
 
 
 
+require(ggplot2)
+
+
+p <- ggplot(data = plot.data, mapping = aes(x = start.sq, y = t))
+
+p+geom_point(shape=19, alpha=0.5, color="pink")
+
+```
+
+From the plot above, we can see that with different starting points, the approximations given by Newton Method converge to local optimization. Also, we can see that there is a 45 degree line trend between starting points and approximation. Therefore, starting points have impact on the final convergence for Newton-Method. 
+
+```{r}
+
+# The following is to check different level with significant digits at 4
+
+g <- factor(round(t, digits = 4))
+
+xg <- split(t, g)
+
+print(xg)
+
+```  
+  
+  
+From the list output, we can see that there are 19 different approximation values according to different starting points (round to 4 digit)
+  
+  
+
+(e)
+There are several pair of close starting points that go to different converagence. I take the 10th and 11th groups as example.
+
+```{r}
+# Check the approximation of the 10th and 11th group
+
+xg[[10]]
+xg[[11]]
+
+```
+
+Above are the 10th (value=-0.9533363, length of 19) the 11th group (value=-0.011972, length of 42) group for level of approximation.
+
+
+```{r}
+# Find the index of the flipping starting point from the 10th group to the 11th group
 
 
 
+id<-sum(plot.data$t<= -0.9533363)
+id
 
-
-
-
+start.sq[id] 
+t[id]
+start.sq[id+1]
+t[id+1]
+```
+  
+At the 74th, the starting point is -0.8367056, with the Newton approximation -0.9533363. While for the next starting point, the 75th, the starting point value is -0.8051318, but the Newton approximation coverages to -0.011972.
 
 
 
